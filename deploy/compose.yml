@@ -1,0 +1,36 @@
+# ==================================
+# LearnNest - Docker Compose 基础服务定义
+# 使用方式：
+#   开发环境: docker compose -f deploy/compose.yml -f deploy/compose.dev.yml up -d
+#   生产环境: docker compose -f deploy/compose.yml -f deploy/compose.prod.yml up -d
+# ==================================
+
+services:
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: learnnest
+      POSTGRES_USER: learnnest
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U learnnest -d learnnest"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:alpine
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:

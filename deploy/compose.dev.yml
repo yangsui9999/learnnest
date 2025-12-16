@@ -1,0 +1,26 @@
+# ==================================
+# LearnNest - 开发环境覆盖配置
+# ==================================
+
+services:
+  api:
+    env_file:
+      - ../backend/config/base.env
+      - ../backend/config/development.env
+      - ../backend/.env.local
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../backend/src:/app/src:ro  # 源码映射（配合热重载）
+
+  db:
+    environment:
+      POSTGRES_PASSWORD: learnnest  # 开发环境简单密码
+    ports:
+      - "5432:5432"  # 开发环境暴露数据库端口
+
+  nginx:
+    volumes:
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"

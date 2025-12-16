@@ -1,0 +1,32 @@
+# ==================================
+# LearnNest - 生产环境覆盖配置
+# 使用方式:
+#   docker compose -f deploy/compose.yml -f deploy/compose.prod.yml \
+#     --env-file /opt/learnnest/.env.secrets up -d
+# ==================================
+
+services:
+  api:
+    env_file:
+      - ../backend/config/base.env
+      - ../backend/config/production.env
+    environment:
+      # 敏感信息通过 --env-file 或环境变量注入
+      DATABASE_URL: postgres://learnnest:${DB_PASSWORD}@db:5432/learnnest
+      JWT_SECRET: ${JWT_SECRET}
+    restart: always
+
+  db:
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    restart: always
+    # 生产环境不暴露数据库端口
+
+  nginx:
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ../frontend/dist:/usr/share/nginx/html:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: always

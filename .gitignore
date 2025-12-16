@@ -17,11 +17,18 @@ Cargo.lock
 # ===========================
 # 环境配置（敏感信息）
 # ===========================
-.env
-.env.*
-!.env.example
+# 忽略所有 .env.local 文件（敏感信息）
+**/.env.local
+
+# 忽略生产环境密钥文件
 *.pem
 *.key
+.env.secrets
+
+# 注意：以下文件会被提交（非敏感配置）
+# - backend/config/*.env
+# - frontend/.env, .env.development, .env.production
+# - backend/.env.local.example
 
 # ===========================
 # IDE / 编辑器
