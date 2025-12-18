@@ -1,7 +1,7 @@
 use crate::config::AppConfig;
 use crate::error::AppError;
 use crate::model::account::{Account, AccountResponse, Claims, LoginRequest, LoginResponse};
-use crate::response::ApiResponse;
+use crate::response::{ApiResponse, ApiResult};
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use jsonwebtoken::{EncodingKey, Header};
 use salvo::writing::Json;
@@ -9,10 +9,7 @@ use salvo::{handler, Depot, Request};
 use sqlx::PgPool;
 
 #[handler]
-pub async fn login(
-    req: &mut Request,
-    depot: &mut Depot,
-) -> Result<Json<ApiResponse<LoginResponse>>, AppError> {
+pub async fn login(req: &mut Request, depot: &mut Depot) -> ApiResult<LoginResponse> {
     // 1. 解析请求
     let input: LoginRequest = req
         .parse_json()

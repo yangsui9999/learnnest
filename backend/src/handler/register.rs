@@ -1,6 +1,6 @@
 use crate::error::AppError;
 use crate::model::account::{AccountResponse, RegisterRequest};
-use crate::response::ApiResponse;
+use crate::response::{ApiResponse, ApiResult};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHasher};
@@ -9,10 +9,7 @@ use salvo::{handler, Depot, Request};
 use sqlx::PgPool;
 
 #[handler]
-pub async fn register(
-    req: &mut Request,
-    depot: &mut Depot,
-) -> Result<Json<ApiResponse<AccountResponse>>, AppError> {
+pub async fn register(req: &mut Request, depot: &mut Depot) -> ApiResult<AccountResponse> {
     // 1. 解析请求体
     let input: RegisterRequest = req
         .parse_json()
