@@ -4,11 +4,13 @@ use std::error::Error;
 use crate::config::AppConfig;
 use crate::db::create_pool;
 use crate::handler::health::*;
+use crate::handler::register::register;
 
 mod config;
 mod db;
 mod error;
 mod handler;
+mod model;
 mod response;
 
 #[tokio::main]
@@ -26,7 +28,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // 注入状态到路由
     let router: Router = Router::new()
         .hoop(affix_state::inject(pgpool))
-        .push(Router::with_path("health").get(health_check));
+        .push(Router::with_path("health").get(health_check))
+        .push(Router::with_path("api/account/register").post(register));
 
     // 启动服务器
     let addr: String = format!("{}:{}", config.server_host, config.server_port);
