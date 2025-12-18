@@ -5,14 +5,13 @@ use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHasher};
 use salvo::writing::Json;
-use salvo::{handler, Depot, Request, Response};
+use salvo::{handler, Depot, Request};
 use sqlx::PgPool;
 
 #[handler]
 pub async fn register(
     req: &mut Request,
     depot: &mut Depot,
-    res: &mut Response,
 ) -> Result<Json<ApiResponse<AccountResponse>>, AppError> {
     // 1. 解析请求体
     let input: RegisterRequest = req
@@ -53,7 +52,7 @@ pub async fn register(
     // 4. 返回响应
     let response = AccountResponse {
         id: uid,
-        username: input.username,
+        username: Some(input.username),
         nickname: input.nickname,
     };
 

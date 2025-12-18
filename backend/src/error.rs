@@ -20,11 +20,20 @@ pub enum AppError {
 
     #[error("密码加密错误")]
     PasswordHash,
+
+    #[error("密码解密错误")]
+    PasswordVerify(String),
+
+    #[error("密码错误")]
+    PasswordError,
+
+    #[error("登录token错误")]
+    TokenError,
 }
 
 #[async_trait]
 impl Writer for AppError {
-    async fn write(self, req: &mut Request, depot: &mut Depot, res: &mut Response) {
+    async fn write(self, _req: &mut Request, _depot: &mut Depot, res: &mut Response) {
         let status = match &self {
             AppError::BadRequest(_) => StatusCode::BAD_REQUEST,
             _ => StatusCode::INTERNAL_SERVER_ERROR,

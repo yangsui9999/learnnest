@@ -9,6 +9,7 @@ pub struct AppConfig {
     pub db_max_conn: u32,
     pub db_connect_timeout_secs: u64,
     pub db_idle_timeout: u64,
+    pub jwt_secret: String,
 }
 
 impl AppConfig {
@@ -28,6 +29,7 @@ impl AppConfig {
         let db_idle_timeout: u64 = env::var("DATABASE_IDLE_TIMEOUT")
             .unwrap_or_else(|_| "600".to_string())
             .parse::<u64>()?;
+        let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
 
         Ok(AppConfig {
             server_host,
@@ -35,7 +37,8 @@ impl AppConfig {
             db_url,
             db_max_conn,
             db_connect_timeout_secs,
-            db_idle_timeout
+            db_idle_timeout,
+            jwt_secret,
         })
     }
 }
