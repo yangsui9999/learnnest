@@ -3,7 +3,7 @@ use std::error::Error;
 
 use crate::config::AppConfig;
 use crate::db::create_pool;
-use crate::handler::task::{create_task, list_tasks, get_task, update_task, delete_task};
+use crate::handler::task::{create_task, delete_task, get_task, list_tasks, update_task};
 use crate::handler::{account::*, health::*, register::*};
 use crate::middleware::auth::create_jwt_auth;
 
@@ -13,7 +13,9 @@ mod error;
 mod handler;
 mod middleware;
 mod model;
+mod repository;
 mod response;
+mod service;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -39,11 +41,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .push(Router::with_path("api/account/login").post(login))
         .push(
             Router::with_path("api")
-            .hoop(auth_middleware)
-            .push(Router::with_path("tasks").get(list_tasks).post(create_task))
-            .push(Router::with_path("tasks/{id}").get(get_task).put(update_task).delete(delete_task))
-        )
-        ;
+                .hoop(auth_middleware)
+                .push(Router::with_path("tasks").get(list_tasks).post(create_task))
+                .push(
+                    Router::with_path("tasks/{id}")
+                        .get(get_task)
+                        .put(update_task)
+                        .delete(delete_task),
+                ),
+        );
 
     // 启动服务器
     let addr: String = format!("{}:{}", config.server_host, config.server_port);
