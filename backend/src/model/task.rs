@@ -22,6 +22,22 @@ pub struct Task {
     pub is_deleted: bool,
 }
 
+impl From<Task> for TaskResponse {
+    fn from(t: Task) -> Self {
+        TaskResponse {
+            id: t.id,
+            title: t.title,
+            description: t.description,
+            task_type: t.task_type,
+            subject: t.subject,
+            status: t.status,
+            due_date: t.due_date,
+            completed_at: t.completed_at,
+            created_at: t.created_at,
+        }
+    }
+}
+
 // 创建请求
 #[derive(Debug, Deserialize)]
 pub struct CreateTaskRequest {

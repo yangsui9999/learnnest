@@ -35,19 +35,7 @@ pub async fn create_task(req: &mut Request, depot: &mut Depot) -> ApiResult<Task
         .create(account_id, &input)
         .await?;
 
-    let response = TaskResponse {
-        id: task.id,
-        title: task.title,
-        description: task.description,
-        task_type: task.task_type,
-        subject: task.subject,
-        status: task.status,
-        due_date: task.due_date,
-        completed_at: task.completed_at,
-        created_at: task.created_at,
-    };
-
-    Ok(Json(ApiResponse::success(response)))
+    Ok(Json(ApiResponse::success(task.into())))
 }
 
 #[handler]
@@ -59,20 +47,7 @@ pub async fn list_tasks(depot: &mut Depot) -> ApiResult<Vec<TaskResponse>> {
 
     let tasks = TaskService::new(pool.clone()).list(account_id).await?;
 
-    let responses = tasks
-        .into_iter()
-        .map(|t| TaskResponse {
-            id: t.id,
-            title: t.title,
-            description: t.description,
-            task_type: t.task_type,
-            subject: t.subject,
-            status: t.status,
-            due_date: t.due_date,
-            completed_at: t.completed_at,
-            created_at: t.created_at,
-        })
-        .collect();
+    let responses = tasks.into_iter().map(Into::into).collect();
 
     Ok(Json(ApiResponse::success(responses)))
 }
@@ -89,19 +64,7 @@ pub async fn get_task(req: &mut Request, depot: &mut Depot) -> ApiResult<TaskRes
         .get(task_id, account_id)
         .await?;
 
-    let response = TaskResponse {
-        id: task.id,
-        title: task.title,
-        description: task.description,
-        task_type: task.task_type,
-        subject: task.subject,
-        status: task.status,
-        due_date: task.due_date,
-        completed_at: task.completed_at,
-        created_at: task.created_at,
-    };
-
-    Ok(Json(ApiResponse::success(response)))
+    Ok(Json(ApiResponse::success(task.into())))
 }
 
 #[handler]
