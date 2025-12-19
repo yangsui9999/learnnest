@@ -2,6 +2,7 @@ use crate::config::AppConfig;
 use crate::error::AppError;
 use crate::model::account::{Account, AccountResponse, Claims, LoginRequest, LoginResponse};
 use crate::response::{ApiResponse, ApiResult};
+use argon2::password_hash::Error;
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use jsonwebtoken::{EncodingKey, Header};
 use salvo::writing::Json;
@@ -27,14 +28,16 @@ pub async fn login(req: &mut Request, depot: &mut Depot) -> ApiResult<LoginRespo
     .fetch_one(pgpool)
     .await?;
 
-    let hashed_pwd = account.password_hash.ok_or(AppError::PasswordHash)?;
+    let hashed_pwd = account.password_hash.ok_or(AppError::Internal)?;
 
     // 3. 验证密码（Argon2 verify）
-    let hasher =
-        PasswordHash::new(&hashed_pwd).map_err(|e| AppError::PasswordVerify(e.to_string()))?;
+    let hasher = PasswordHash::new(&hashed_pwd).map_err(|e| AppError::Internal)?;
     Argon2::default()
         .verify_password(input.password.as_bytes(), &hasher)
-        .map_err(|_| AppError::PasswordError)?;
+        .map_err(|e| match e {
+            Error::Password => AppError::PasswordError,
+            _ => AppError::Internal,
+        })?;
 
     // 4. 生成 JWT token
     let add_date = chrono::Utc::now() + chrono::Duration::days(7);
@@ -50,7 +53,7 @@ pub async fn login(req: &mut Request, depot: &mut Depot) -> ApiResult<LoginRespo
         &claims,
         &EncodingKey::from_secret(jwt_secret.as_bytes()),
     )
-    .map_err(|_| AppError::TokenError)?;
+    .map_err(|_| AppError::Internal)?;
 
     // 5. 返回响应
     let login_resp = LoginResponse {

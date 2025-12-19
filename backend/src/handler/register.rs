@@ -20,7 +20,7 @@ pub async fn register(req: &mut Request, depot: &mut Depot) -> ApiResult<Account
     let salt = SaltString::generate(&mut OsRng);
     let password_hash = Argon2::default()
         .hash_password(input.password.as_bytes(), &salt)
-        .map_err(|_| AppError::PasswordHash)?
+        .map_err(|_| AppError::Internal)?
         .to_string();
 
     // 先写死
