@@ -3,6 +3,7 @@ use std::error::Error;
 
 use crate::config::AppConfig;
 use crate::db::create_pool;
+use crate::handler::task::{create_task, list_tasks, get_task, update_task, delete_task};
 use crate::handler::{account::*, health::*, register::*};
 use crate::middleware::auth::create_jwt_auth;
 
@@ -36,7 +37,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .push(Router::with_path("health").get(health_check))
         .push(Router::with_path("api/account/register").post(register))
         .push(Router::with_path("api/account/login").post(login))
-        //.push(Router::with_path("api/task").hoop(auth_middleware).get(list_tasks))
+        .push(
+            Router::with_path("api")
+            .hoop(auth_middleware)
+            .push(Router::with_path("tasks").get(list_tasks).post(create_task))
+            .push(Router::with_path("tasks/{id}").get(get_task).put(update_task).delete(delete_task))
+        )
         ;
 
     // 启动服务器

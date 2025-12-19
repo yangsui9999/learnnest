@@ -32,7 +32,7 @@ pub struct LoginResponse {
     pub account: AccountResponse,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Claims {
     pub sub: String, // subject: account_id
     pub exp: usize,  // 过期时间（时间戳）
