@@ -1,18 +1,16 @@
+use crate::common::context::Repos;
 use crate::error::AppError;
 use crate::model::task::{CreateTaskRequest, Task, UpdateTaskRequest};
-use crate::repository::task::TaskRepository;
-use sqlx::PgPool;
 use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct TaskService {
-    task_repo: TaskRepository,
+    repos: Repos,
 }
 
 impl TaskService {
-    pub fn new(pool: PgPool) -> Self {
-        let task_repo = TaskRepository::new(pool);
-        Self { task_repo }
+    pub fn new(repos: Repos) -> Self {
+        Self { repos }
     }
 
     pub async fn create(
@@ -23,19 +21,21 @@ impl TaskService {
         let uid = uuid::Uuid::new_v4();
         let now = chrono::Utc::now();
 
-        self.task_repo
+        self.repos
+            .task
             .insert(uid, account_id, &now, &now, input)
             .await
     }
 
     pub async fn get(&self, task_id: Uuid, account_id: Uuid) -> Result<Task, AppError> {
-        self.task_repo
+        self.repos
+            .task
             .find_by_id_and_account(task_id, account_id)
             .await
     }
 
     pub async fn list(&self, account_id: Uuid) -> Result<Vec<Task>, AppError> {
-        self.task_repo.find_all_by_account(account_id).await
+        self.repos.task.find_all_by_account(account_id).await
     }
 
     pub async fn update(
@@ -44,10 +44,10 @@ impl TaskService {
         account_id: Uuid,
         input: UpdateTaskRequest,
     ) -> Result<(), AppError> {
-        self.task_repo.update(task_id, account_id, input).await
+        self.repos.task.update(task_id, account_id, input).await
     }
 
     pub async fn delete(&self, task_id: Uuid, account_id: Uuid) -> Result<(), AppError> {
-        self.task_repo.delete(task_id, account_id).await
+        self.repos.task.delete(task_id, account_id).await
     }
 }

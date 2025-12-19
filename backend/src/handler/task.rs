@@ -1,9 +1,9 @@
 use salvo::{handler, prelude::JwtAuthDepotExt, writing::Json, Depot, Request};
-use sqlx::PgPool;
+use std::sync::Arc;
 use uuid::Uuid;
 
+use crate::common::context::AppContext;
 use crate::model::task::{CreateTaskRequest, UpdateTaskRequest};
-use crate::service::task::TaskService;
 use crate::{
     error::AppError,
     model::{account::Claims, task::TaskResponse},
@@ -28,27 +28,19 @@ pub async fn create_task(req: &mut Request, depot: &mut Depot) -> ApiResult<Task
         .await
         .map_err(|e| AppError::BadRequest(e.to_string()))?;
 
-    let pool = depot.obtain::<PgPool>().unwrap();
-
     // 3. 写入数据
-    let task = TaskService::new(pool.clone())
-        .create(account_id, &input)
-        .await?;
+    let ctx = depot.obtain::<Arc<AppContext>>().unwrap();
+    let task = ctx.services.task.create(account_id, &input).await?;
 
     Ok(Json(ApiResponse::success(task.into())))
 }
 
 #[handler]
 pub async fn list_tasks(depot: &mut Depot) -> ApiResult<Vec<TaskResponse>> {
-    // 查询当前用户，未删除的任务
     let account_id = get_account_id(depot);
-
-    let pool = depot.obtain::<PgPool>().unwrap();
-
-    let tasks = TaskService::new(pool.clone()).list(account_id).await?;
-
+    let ctx = depot.obtain::<Arc<AppContext>>().unwrap();
+    let tasks = ctx.services.task.list(account_id).await?;
     let responses = tasks.into_iter().map(Into::into).collect();
-
     Ok(Json(ApiResponse::success(responses)))
 }
 
@@ -58,11 +50,8 @@ pub async fn get_task(req: &mut Request, depot: &mut Depot) -> ApiResult<TaskRes
     let task_id = Uuid::parse_str(&task_id).map_err(|e| AppError::BadRequest(e.to_string()))?;
 
     let account_id = get_account_id(depot);
-    let pool = depot.obtain::<PgPool>().unwrap();
-
-    let task = TaskService::new(pool.clone())
-        .get(task_id, account_id)
-        .await?;
+    let ctx = depot.obtain::<Arc<AppContext>>().unwrap();
+    let task = ctx.services.task.get(task_id, account_id).await?;
 
     Ok(Json(ApiResponse::success(task.into())))
 }
@@ -71,18 +60,15 @@ pub async fn get_task(req: &mut Request, depot: &mut Depot) -> ApiResult<TaskRes
 pub async fn update_task(req: &mut Request, depot: &mut Depot) -> ApiResult<()> {
     let task_id = req.param::<String>("id").unwrap();
     let task_id = Uuid::parse_str(&task_id).map_err(|e| AppError::BadRequest(e.to_string()))?;
-
     let account_id = get_account_id(depot);
-    let pool = depot.obtain::<PgPool>().unwrap();
 
     let input: UpdateTaskRequest = req
         .parse_json()
         .await
         .map_err(|e| AppError::BadRequest(e.to_string()))?;
 
-    TaskService::new(pool.clone())
-        .update(task_id, account_id, input)
-        .await?;
+    let ctx = depot.obtain::<Arc<AppContext>>().unwrap();
+    ctx.services.task.update(task_id, account_id, input).await?;
 
     Ok(Json(ApiResponse::ok()))
 }
@@ -91,13 +77,10 @@ pub async fn update_task(req: &mut Request, depot: &mut Depot) -> ApiResult<()> 
 pub async fn delete_task(req: &mut Request, depot: &mut Depot) -> ApiResult<()> {
     let task_id = req.param::<String>("id").unwrap();
     let task_id = Uuid::parse_str(&task_id).map_err(|e| AppError::BadRequest(e.to_string()))?;
-
     let account_id = get_account_id(depot);
-    let pool = depot.obtain::<PgPool>().unwrap();
 
-    TaskService::new(pool.clone())
-        .delete(task_id, account_id)
-        .await?;
+    let ctx = depot.obtain::<Arc<AppContext>>().unwrap();
+    ctx.services.task.delete(task_id, account_id).await?;
 
     Ok(Json(ApiResponse::ok()))
 }

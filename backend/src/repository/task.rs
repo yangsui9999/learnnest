@@ -1,3 +1,4 @@
+use crate::common::from_pool::FromPool;
 use crate::error::AppError;
 use crate::model::task::{CreateTaskRequest, Task, UpdateTaskRequest};
 use sqlx::PgPool;
@@ -6,6 +7,12 @@ use uuid::Uuid;
 #[derive(Clone)]
 pub struct TaskRepository {
     pool: PgPool,
+}
+
+impl FromPool for TaskRepository {
+    fn from_pool(pool: PgPool) -> Self {
+        Self::new(pool)
+    }
 }
 
 impl TaskRepository {
