@@ -1,4 +1,4 @@
-use crate::common::context::AppContext;
+use crate::app::context::AppContext;
 use crate::config::AppConfig;
 use crate::db::create_pool;
 use crate::handler::task::{create_task, delete_task, get_task, list_tasks, update_task};
@@ -8,7 +8,7 @@ use salvo::prelude::*;
 use std::error::Error;
 use std::sync::Arc;
 
-mod common;
+mod app;
 mod config;
 mod db;
 mod error;

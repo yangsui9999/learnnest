@@ -1,4 +1,4 @@
-use crate::common::from_pool::FromPool;
+use crate::app::from_pool::FromPool;
 use crate::repository::task::TaskRepository;
 use crate::service::task::TaskService;
 use sqlx::PgPool;

@@ -1,4 +1,4 @@
-use crate::common::from_pool::FromPool;
+use crate::app::from_pool::FromPool;
 use crate::error::AppError;
 use crate::model::task::{CreateTaskRequest, Task, UpdateTaskRequest};
 use sqlx::PgPool;

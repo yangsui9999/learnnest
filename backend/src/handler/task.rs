@@ -2,7 +2,7 @@ use salvo::{handler, prelude::JwtAuthDepotExt, writing::Json, Depot, Request};
 use std::sync::Arc;
 use uuid::Uuid;
 
-use crate::common::context::AppContext;
+use crate::app::context::AppContext;
 use crate::model::task::{CreateTaskRequest, UpdateTaskRequest};
 use crate::{
     error::AppError,
