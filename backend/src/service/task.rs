@@ -28,41 +28,26 @@ impl TaskService {
             .await
     }
 
-    pub async fn get_by_task_id_account_id(
-        &self,
-        task_id: Uuid,
-        account_id: Uuid,
-    ) -> Result<Task, AppError> {
+    pub async fn get(&self, task_id: Uuid, account_id: Uuid) -> Result<Task, AppError> {
         self.task_repo
-            .get_by_task_id_account_id(task_id, account_id)
+            .find_by_id_and_account(task_id, account_id)
             .await
     }
 
-    pub async fn get_task_list_by_account_id(
-        &self,
-        account_id: Uuid,
-    ) -> Result<Vec<Task>, AppError> {
-        self.task_repo.get_list_by_account_id(account_id).await
+    pub async fn list(&self, account_id: Uuid) -> Result<Vec<Task>, AppError> {
+        self.task_repo.find_all_by_account(account_id).await
     }
 
-    pub async fn update_by_task_id_account_id(
+    pub async fn update(
         &self,
         task_id: Uuid,
         account_id: Uuid,
         input: UpdateTaskRequest,
     ) -> Result<(), AppError> {
-        self.task_repo
-            .update_by_task_id_account_id(task_id, account_id, input)
-            .await
+        self.task_repo.update(task_id, account_id, input).await
     }
 
-    pub async fn delete_by_task_id_account_id(
-        &self,
-        task_id: Uuid,
-        account_id: Uuid,
-    ) -> Result<(), AppError> {
-        self.task_repo
-            .delete_by_task_id_account_id(task_id, account_id)
-            .await
+    pub async fn delete(&self, task_id: Uuid, account_id: Uuid) -> Result<(), AppError> {
+        self.task_repo.delete(task_id, account_id).await
     }
 }

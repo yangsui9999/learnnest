@@ -57,9 +57,7 @@ pub async fn list_tasks(depot: &mut Depot) -> ApiResult<Vec<TaskResponse>> {
 
     let pool = depot.obtain::<PgPool>().unwrap();
 
-    let tasks = TaskService::new(pool.clone())
-        .get_task_list_by_account_id(account_id)
-        .await?;
+    let tasks = TaskService::new(pool.clone()).list(account_id).await?;
 
     let responses = tasks
         .into_iter()
@@ -88,7 +86,7 @@ pub async fn get_task(req: &mut Request, depot: &mut Depot) -> ApiResult<TaskRes
     let pool = depot.obtain::<PgPool>().unwrap();
 
     let task = TaskService::new(pool.clone())
-        .get_by_task_id_account_id(task_id, account_id)
+        .get(task_id, account_id)
         .await?;
 
     let response = TaskResponse {
@@ -120,7 +118,7 @@ pub async fn update_task(req: &mut Request, depot: &mut Depot) -> ApiResult<()> 
         .map_err(|e| AppError::BadRequest(e.to_string()))?;
 
     TaskService::new(pool.clone())
-        .update_by_task_id_account_id(task_id, account_id, input)
+        .update(task_id, account_id, input)
         .await?;
 
     Ok(Json(ApiResponse::ok()))
@@ -135,7 +133,7 @@ pub async fn delete_task(req: &mut Request, depot: &mut Depot) -> ApiResult<()> 
     let pool = depot.obtain::<PgPool>().unwrap();
 
     TaskService::new(pool.clone())
-        .delete_by_task_id_account_id(task_id, account_id)
+        .delete(task_id, account_id)
         .await?;
 
     Ok(Json(ApiResponse::ok()))

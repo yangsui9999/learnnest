@@ -49,7 +49,7 @@ impl TaskRepository {
         Ok(task)
     }
 
-    pub async fn get_by_task_id_account_id(
+    pub async fn find_by_id_and_account(
         &self,
         task_id: Uuid,
         account_id: Uuid,
@@ -73,7 +73,7 @@ impl TaskRepository {
         Ok(task)
     }
 
-    pub async fn get_list_by_account_id(&self, account_id: Uuid) -> Result<Vec<Task>, AppError> {
+    pub async fn find_all_by_account(&self, account_id: Uuid) -> Result<Vec<Task>, AppError> {
         let tasks = sqlx::query_as!(
             Task,
             r#"SELECT id, account_id, title, description,
@@ -92,7 +92,7 @@ impl TaskRepository {
         Ok(tasks)
     }
 
-    pub async fn update_by_task_id_account_id(
+    pub async fn update(
         &self,
         task_id: Uuid,
         account_id: Uuid,
@@ -129,11 +129,7 @@ impl TaskRepository {
         Ok(())
     }
 
-    pub async fn delete_by_task_id_account_id(
-        &self,
-        task_id: Uuid,
-        account_id: Uuid,
-    ) -> Result<(), AppError> {
+    pub async fn delete(&self, task_id: Uuid, account_id: Uuid) -> Result<(), AppError> {
         let now = chrono::Utc::now();
         sqlx::query!(
             r#"
