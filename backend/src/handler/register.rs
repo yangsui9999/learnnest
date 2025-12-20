@@ -1,5 +1,5 @@
 use crate::error::AppError;
-use crate::handler::DepotExt;
+use crate::handler::{DepotExt, RequestExt};
 use crate::model::account::{AccountCreate, AccountResponse, RegisterRequest};
 use crate::response::{ApiResponse, ApiResult};
 use argon2::password_hash::rand_core::OsRng;
@@ -11,15 +11,12 @@ use salvo::{handler, Depot, Request};
 #[handler]
 pub async fn register(req: &mut Request, depot: &mut Depot) -> ApiResult<AccountResponse> {
     // 1. 解析请求体
-    let input: RegisterRequest = req
-        .parse_json()
-        .await
-        .map_err(|e| AppError::BadRequest(e.to_string()))?;
+    let reg_req = req.parse_request_body::<RegisterRequest>().await?;
 
     // 2. 加密
     let salt = SaltString::generate(&mut OsRng);
     let password_hash = Argon2::default()
-        .hash_password(input.password.as_bytes(), &salt)
+        .hash_password(reg_req.password.as_bytes(), &salt)
         .map_err(|_| AppError::Internal)?
         .to_string();
 
@@ -32,8 +29,8 @@ pub async fn register(req: &mut Request, depot: &mut Depot) -> ApiResult<Account
     // 3. 写入数据
     let account_create = AccountCreate {
         id: uid,
-        username: Some(input.username.clone()),
-        nickname: input.nickname.clone(),
+        username: Some(reg_req.username.clone()),
+        nickname: reg_req.nickname.clone(),
         password_hash: Some(password_hash),
         role,
         created_at: now,
@@ -48,8 +45,8 @@ pub async fn register(req: &mut Request, depot: &mut Depot) -> ApiResult<Account
     // 4. 返回响应
     let response = AccountResponse {
         id: uid,
-        username: Some(input.username.clone()),
-        nickname: input.nickname.clone(),
+        username: Some(reg_req.username.clone()),
+        nickname: reg_req.nickname.clone(),
     };
 
     Ok(Json(ApiResponse::success(response)))

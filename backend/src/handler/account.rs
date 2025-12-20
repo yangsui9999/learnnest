@@ -1,5 +1,5 @@
 use crate::error::AppError;
-use crate::handler::DepotExt;
+use crate::handler::{DepotExt, RequestExt};
 use crate::model::account::{AccountResponse, Claims, LoginRequest, LoginResponse};
 use crate::response::{ApiResponse, ApiResult};
 use argon2::password_hash::Error;
@@ -11,13 +11,10 @@ use salvo::{handler, Depot, Request};
 #[handler]
 pub async fn login(req: &mut Request, depot: &mut Depot) -> ApiResult<LoginResponse> {
     // 1. 解析请求
-    let input: LoginRequest = req
-        .parse_json()
-        .await
-        .map_err(|e| AppError::BadRequest(e.to_string()))?;
+    let login_req = req.parse_request_body::<LoginRequest>().await?;
 
     let ctx = depot.app_context()?;
-    let account = ctx.services.account.get(input.username).await?;
+    let account = ctx.services.account.get(login_req.username).await?;
 
     let hashed_pwd = account.password_hash.ok_or(AppError::Internal)?;
 
@@ -27,7 +24,7 @@ pub async fn login(req: &mut Request, depot: &mut Depot) -> ApiResult<LoginRespo
         AppError::Internal
     })?;
     Argon2::default()
-        .verify_password(input.password.as_bytes(), &hasher)
+        .verify_password(login_req.password.as_bytes(), &hasher)
         .map_err(|e| match e {
             Error::Password => AppError::PasswordError,
             _ => AppError::Internal,

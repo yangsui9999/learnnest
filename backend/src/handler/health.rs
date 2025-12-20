@@ -1,8 +1,7 @@
+use crate::handler::DepotExt;
+use crate::response::{ApiResponse, ApiResult};
 use salvo::prelude::*;
-use sqlx::PgPool;
 use serde::Serialize;
-
-use crate::response::ApiResponse;
 
 #[derive(Serialize)]
 pub struct HealthData {
@@ -11,9 +10,9 @@ pub struct HealthData {
 }
 
 #[handler]
-pub async fn health_check(depot: &mut Depot, res: &mut Response) {
+pub async fn health_check(depot: &mut Depot) -> ApiResult<HealthData> {
     // 从 depot 获取连接池
-    let pool = depot.obtain::<PgPool>().unwrap();
+    let pool = depot.pool()?;
 
     // 测试数据库连接
     let db_status = sqlx::query("SELECT 1")
@@ -28,5 +27,5 @@ pub async fn health_check(depot: &mut Depot, res: &mut Response) {
         db: db_status.into(),
     };
 
-    res.render(Json(ApiResponse::success(data)));
+    Ok(Json(ApiResponse::success(data)))
 }

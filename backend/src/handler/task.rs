@@ -3,7 +3,6 @@ use salvo::{handler, writing::Json, Depot, Request};
 use crate::handler::{DepotExt, RequestExt};
 use crate::model::task::{CreateTaskRequest, UpdateTaskRequest};
 use crate::{
-    error::AppError,
     model::task::TaskResponse,
     response::{ApiResponse, ApiResult},
 };
@@ -11,15 +10,11 @@ use crate::{
 #[handler]
 pub async fn create_task(req: &mut Request, depot: &mut Depot) -> ApiResult<TaskResponse> {
     // 解析请求体
-    let input = req
-        .parse_json::<CreateTaskRequest>()
-        .await
-        .map_err(|e| AppError::BadRequest(e.to_string()))?;
+    let task_req = req.parse_request_body::<CreateTaskRequest>().await?;
 
-    // 3. 写入数据
     let ctx = depot.app_context()?;
     let account_id = depot.current_account_id()?;
-    let task = ctx.services.task.create(account_id, &input).await?;
+    let task = ctx.services.task.create(account_id, &task_req).await?;
 
     Ok(Json(ApiResponse::success(task.into())))
 }
@@ -46,15 +41,15 @@ pub async fn get_task(req: &mut Request, depot: &mut Depot) -> ApiResult<TaskRes
 
 #[handler]
 pub async fn update_task(req: &mut Request, depot: &mut Depot) -> ApiResult<()> {
-    let input: UpdateTaskRequest = req
-        .parse_json()
-        .await
-        .map_err(|e| AppError::BadRequest(e.to_string()))?;
+    let update_req = req.parse_request_body::<UpdateTaskRequest>().await?;
 
     let ctx = depot.app_context()?;
     let account_id = depot.current_account_id()?;
     let task_id = req.require_uuid_param("id")?;
-    ctx.services.task.update(task_id, account_id, input).await?;
+    ctx.services
+        .task
+        .update(task_id, account_id, update_req)
+        .await?;
 
     Ok(Json(ApiResponse::ok()))
 }
