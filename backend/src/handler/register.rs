@@ -1,12 +1,12 @@
 use crate::error::AppError;
-use crate::model::account::{AccountResponse, RegisterRequest};
+use crate::handler::DepotExt;
+use crate::model::account::{AccountCreate, AccountResponse, RegisterRequest};
 use crate::response::{ApiResponse, ApiResult};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHasher};
 use salvo::writing::Json;
 use salvo::{handler, Depot, Request};
-use sqlx::PgPool;
 
 #[handler]
 pub async fn register(req: &mut Request, depot: &mut Depot) -> ApiResult<AccountResponse> {
@@ -24,33 +24,32 @@ pub async fn register(req: &mut Request, depot: &mut Depot) -> ApiResult<Account
         .to_string();
 
     // 先写死
+    // todo 写死的 role
     let role = "parent".to_string();
     let uid = uuid::Uuid::new_v4();
     let now = chrono::Utc::now();
 
-    let pool = depot.obtain::<PgPool>().unwrap();
-
     // 3. 写入数据
-    sqlx::query!(
-        r#"INSERT INTO account(id, username, password_hash, nickname, role, created_at, created_by, updated_at, updated_by, is_deleted)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"#,
-        uid,
-        input.username,
-        password_hash,
-        input.nickname,
+    let account_create = AccountCreate {
+        id: uid,
+        username: Some(input.username.clone()),
+        nickname: input.nickname.clone(),
+        password_hash: Some(password_hash),
         role,
-        now,
-        uid,
-       now,
-        uid,
-        false,
-    ).execute(pool).await?;
+        created_at: now,
+        updated_at: now,
+        created_by: uid,
+        updated_by: uid,
+        is_deleted: false,
+    };
+    let ctx = depot.app_context()?;
+    ctx.services.account.create(account_create).await?;
 
     // 4. 返回响应
     let response = AccountResponse {
         id: uid,
-        username: Some(input.username),
-        nickname: input.nickname,
+        username: Some(input.username.clone()),
+        nickname: input.nickname.clone(),
     };
 
     Ok(Json(ApiResponse::success(response)))

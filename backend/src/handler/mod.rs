@@ -1,7 +1,8 @@
 use crate::app::context::AppContext;
+use crate::config::AppConfig;
 use crate::error::AppError;
 use crate::model::account::Claims;
-use salvo::{prelude::JwtAuthDepotExt, writing::Json, Depot, Request};
+use salvo::{prelude::JwtAuthDepotExt, Depot, Request};
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -23,6 +24,7 @@ pub(crate) fn require_state<T: Send + Sync + 'static>(depot: &Depot) -> Result<&
 pub(crate) trait DepotExt {
     fn app_context(&self) -> Result<&Arc<AppContext>, AppError>;
     fn current_account_id(&self) -> Result<Uuid, AppError>;
+    fn app_config(&self) -> Result<&AppConfig, AppError>;
 }
 
 impl DepotExt for Depot {
@@ -39,6 +41,10 @@ impl DepotExt for Depot {
         let account_id = Uuid::parse_str(&claims.claims.sub).map_err(|_| AppError::Unauthorized)?;
 
         Ok(account_id)
+    }
+
+    fn app_config(&self) -> Result<&AppConfig, AppError> {
+        require_state::<AppConfig>(self)
     }
 }
 

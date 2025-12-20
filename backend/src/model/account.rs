@@ -53,3 +53,16 @@ pub struct Account {
     pub updated_by: Uuid,
     pub is_deleted: bool,
 }
+
+pub struct AccountCreate {
+    pub id: Uuid,
+    pub username: Option<String>,
+    pub nickname: String,
+    pub password_hash: Option<String>,
+    pub role: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub created_by: Uuid,
+    pub updated_by: Uuid,
+    pub is_deleted: bool,
+}
